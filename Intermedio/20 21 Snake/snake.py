@@ -31,6 +31,10 @@ class Snake:
         if self.direction != "left":
             self.direction = "right"
 
+    def increase(self):
+        tortuga = self.parts[-1].clone()
+        self.parts.append(tortuga)
+
     def move(self):
         for index in range(len(self.parts)-1, 0, -1):
             self.parts[index].setposition(self.parts[index - 1].pos())
