@@ -50,3 +50,17 @@ class Snake:
             self.head.setposition(pos_x + SPEED, pos_y)
         else:
             self.head.setposition(pos_x - SPEED, pos_y)
+
+    def reset(self):
+        for piece in self.parts:
+            piece.goto(1000, 1000)
+
+        t = Turtle(shape="square")
+        t.color("white")
+        t.penup()
+
+        self.parts = [t, t.clone(), t.clone()]
+        self.parts[1].goto(x=-20, y=0)
+        self.parts[2].goto(x=-40, y=0)
+        self.direction = "right"
+        self.head = self.parts[0]
