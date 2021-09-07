@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from random import randint, choice, shuffle
 import pyperclip
+import json
 
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
@@ -25,6 +26,25 @@ def generate_pass():
 
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
+def retrieve():
+    website = f_website.get()
+
+    if len(website) == 0:
+        return
+
+    try:
+        with open("data.json") as handle:
+            data = json.load(handle)
+            row = data[website]
+            message = f"""These are the credentials:
+            Username: {row["username"]}
+            Password: {row["password"]}"""
+            messagebox.showinfo(title="Data account", message=message)
+    except FileNotFoundError or KeyError:
+        messagebox.showerror(title="Error!", message=f"No details for {website} found")
+
+
+# ---------------------------- SAVE PASSWORD ------------------------------- #
 def save():
     website = f_website.get()
     user = f_username.get()
@@ -42,11 +62,23 @@ def save():
     is_ok = messagebox.askokcancel(title="Confirmation", message=message)
 
     if is_ok:
-        row = f"{website}, {user}, {password}\n"
+        row = {website: {
+            "username": user,
+            "password": password
+        }}
+
+        try:
+            with open("data.json") as handle:
+                data = json.load(handle)
+        except FileNotFoundError:
+            data = {}
+        finally:
+            data.update(row)
+            with open("data.json", mode="w") as handle:
+                json.dump(data, fp=handle, indent=4)
+
         f_password.delete(0, END)
         f_website.delete(0, END)
-        with open("data.txt", mode="a") as handle:
-            handle.write(row)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -66,15 +98,17 @@ lb_username.grid(column=0, row=2)
 lb_password = Label(text="Password:")
 lb_password.grid(column=0, row=3)
 
-f_website = Entry(width=45)
+f_website = Entry(width=33)
 f_website.focus()
-f_website.grid(column=1, row=1, columnspan=2)
+f_website.grid(column=1, row=1)
 f_username = Entry(width=45)
 f_username.insert(0, "micorreo@gmail.com")
 f_username.grid(column=1, row=2, columnspan=2)
 f_password = Entry(width=33)
 f_password.grid(column=1, row=3)
 
+bt_search = Button(text="Search", width=9, command=retrieve)
+bt_search.grid(column=2, row=1)
 bt_create = Button(text="Make Pass", width=9, command=generate_pass)
 bt_create.grid(column=2, row=3)
 bt_add = Button(text="Add", width=38, command=save)
