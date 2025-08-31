@@ -65,9 +65,9 @@ class Graphics:
                     self.is_welcoming = False
                     self.has_clicked = False
         elif self.lose:
-            self.current_message = MESSAGES_LOSE[self.lose_message_index]
+            self.current_message = MESSAGES_LOSE[self.lose_message_index] + " (Clic aqui para otra partida)"
         elif self.win:
-            self.current_message = MESSAGES_WIN[self.win_message_index]
+            self.current_message = MESSAGES_WIN[self.win_message_index] + " (Clic para jugar de nuevo)"
 
         self._draw_top_message(font,  self.current_message)
 
@@ -111,19 +111,28 @@ class Graphics:
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if self.lose or self.win:
-                    continue
-
-                self.has_clicked = True
                 coordinates = pygame.mouse.get_pos()
-                x = coordinates[0] // self.cell_width
-                y = (coordinates[1] - self.offset_top) // self.cell_height
 
-                if 0 <= x < self.board.x_size and 0 <= y < self.board.y_size:
-                    self.button_states[y][x] = True
+                if self.lose or self.win:
+                    # Check if clicked on the top text to start a new game
+                    x = coordinates[0]
+                    y = coordinates[1]
 
-                    if self.board.get_cell(x, y) == 0:
-                        self._reveal_adjacent_cells(x, y)
+                    if 0 <= x <= self.width and 0 <= y <= self.offset_top:
+                        self._new_game()
+                else:
+                    self.has_clicked = True
+                    x = coordinates[0] // self.cell_width
+                    y = (coordinates[1] - self.offset_top) // self.cell_height
+
+                    if 0 <= x < self.board.x_size and 0 <= y < self.board.y_size:
+                        if not self.board.is_initialized:
+                            self.board.generate_mines(x, y)
+
+                        self.button_states[y][x] = True
+
+                        if self.board.get_cell(x, y) == 0:
+                            self._reveal_adjacent_cells(x, y)
 
 
     def _reveal_adjacent_cells(self, x: int, y: int) -> None:
@@ -146,6 +155,23 @@ class Graphics:
                 if not self.button_states[y][x] and self.board.get_cell(x, y) != -1:
                     return False
         return True
+
+
+    def _new_game(self):
+        self.button_states = [[False for _ in range(self.board.x_size)] for _ in range(self.board.y_size)]
+        self.lose = False
+        self.win = False
+        self.is_hovering = False
+        self.has_clicked = False
+        self.is_welcoming = True
+        self.counter_clock = 0
+
+        # Pick random messages
+        self.welcome_message_index = random.randint(0, len(MESSAGES_WELCOME) - 1)
+        self.lose_message_index = random.randint(0, len(MESSAGES_LOSE) - 1)
+        self.win_message_index = random.randint(0, len(MESSAGES_WIN) - 1)
+
+        self.board.new_board()
 
 
     def main_loop(self):

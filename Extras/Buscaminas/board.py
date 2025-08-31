@@ -7,15 +7,19 @@ class Board:
         self.probability = probability
         self.max_num_mines = max_num_mines
 
-        self.num_mines = 0
-
         self.board = [[0 for _ in range(x_size)] for _ in range(y_size)]
-        self._generate_mines()
+        self.num_mines = 0
+        self.is_initialized = False
 
 
-    def _generate_mines(self) -> None:
+    def generate_mines(self, preserved_x, preserved_y) -> None:
+        self.is_initialized = True
+
         for y in range(self.y_size):
             for x in range(self.x_size):
+                if x == preserved_x and y == preserved_y:
+                    continue
+
                 if self.num_mines >= self.max_num_mines:
                     return
 
@@ -23,6 +27,9 @@ class Board:
                     self.board[y][x] = -1
                     self._increment_adjacent_cells(x, y)
                     self.num_mines += 1
+
+        if self.num_mines < self.max_num_mines:
+            self.generate_mines(preserved_x, preserved_y)
 
 
     def _increment_adjacent_cells(self, x: int, y: int) -> None:
@@ -33,6 +40,12 @@ class Board:
                     # Don't increment the mine cell itself u other mines
                     if self.board[y + dy][x + dx] != -1:
                         self.board[y + dy][x + dx] += 1
+
+
+    def new_board(self) -> None:
+        self.num_mines = 0
+        self.board = [[0 for _ in range(self.x_size)] for _ in range(self.y_size)]
+        self.is_initialized = False
 
 
     def get_cell(self, x: int, y: int) -> int:
